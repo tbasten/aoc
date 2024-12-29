@@ -39,8 +39,18 @@ function Get-Rule2Status{
     }
 }
 
-
-
+function Get-Rule3Direction{
+    param (
+        [int]$currentInt,
+        [int]$NextInt
+    )
+    $r = $currentInt - $NextInt
+    switch($r){
+        {$_ -le 0} {Return -1}
+        {$_ -gt 0} {Return 1}
+        {$_ -eq 0} {Return 0}
+    }
+}
 foreach($line in $inputArray){
     $rule1results = New-Object System.Collections.ArrayList
     $rule2results = New-Object System.Collections.ArrayList
@@ -53,7 +63,6 @@ foreach($line in $inputArray){
     }
     $line | Add-Member -MemberType NoteProperty -Name 'Direction' -Value $direction
     
-    #Rule 2 - Any two adjacent levels differ by at least one and at most three
     for ($i=0; $i -lt ($line.input.Length -1); $i++) {
         $rule1 = Get-Rule1Status -currentInt $line.input[$i] -NextInt $line.input[$i+1]
         $rule2 = Get-Rule2Status -currentInt $line.input[$i] -NextInt $line.input[$i+1]
