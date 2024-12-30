@@ -1,7 +1,7 @@
-$input = Get-Content $PSScriptRoot\2024\02\sample_input.txt
+$inputFile = Get-Content $PSScriptRoot\sample_input.txt
 $inputArray = New-Object System.Collections.ArrayList
 
-foreach($line in $input){
+foreach($line in $inputFile){
     $i = [PSCustomObject]@{
         input = $line -split '\D'
         result = [PSCustomObject]@{
@@ -54,6 +54,7 @@ function Get-Rule3Direction{
 foreach($line in $inputArray){
     $rule1results = New-Object System.Collections.ArrayList
     $rule2results = New-Object System.Collections.ArrayList
+    $rule3array = New-Object System.Collections.ArrayList
     #get initial direction
     $diff = [int]$line.input[1] - [int]$line.input[0]
     switch($diff){
@@ -63,11 +64,19 @@ foreach($line in $inputArray){
     }
     $line | Add-Member -MemberType NoteProperty -Name 'Direction' -Value $direction
     
+    $ruleViolation = 0
+
     for ($i=0; $i -lt ($line.input.Length -1); $i++) {
         $rule1 = Get-Rule1Status -currentInt $line.input[$i] -NextInt $line.input[$i+1]
         $rule2 = Get-Rule2Status -currentInt $line.input[$i] -NextInt $line.input[$i+1]
+        $rule3 = Get-Rule3Direction -currentInt $line.input[$i] -NextInt $line.input[$i+1]
+
+        if($rule1 -eq $false){$ruleViolation++}
+        if($rule2 -eq $false){$ruleViolation++}
+
         [Void]$rule1results.Add($rule1)
         [Void]$rule2results.Add($rule2)
+        [Void]$rule3array.Add($rule3)
     }
     if($rule1results -notcontains $false){
         $line.result.rule1 = $true
@@ -75,6 +84,18 @@ foreach($line in $inputArray){
     if($rule2results -notcontains $false){
         $line.result.rule2 = $true
     }
+    switch($rule3){
+        1 {
+            if($rule3array -notcontains -1){
+                $line.result.rule3 = $true
+            }
+        }
+        -1 {
+            if($rule3array -notcontains 1){
+                $line.result.rule3 = $true
+            }
+        }
+    }
+    $line | Add-Member -MemberType NoteProperty -Name 'RuleViolations' -Value $ruleViolation
 }
-
-$inputArray
+$inputArray | Where-Object RuleViolations -eq 1 | Measure-Object
